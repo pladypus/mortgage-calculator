@@ -1,28 +1,68 @@
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { NumberField } from "./NumberField";
 import { PaymentChart } from "./PaymentChart";
-import { calculatePayment, PMI_THRESHOLD_PERCENT, type MortgageInputs } from "./mortgage";
+import {
+  calculatePayment,
+  estimateCosts,
+  ESTIMATE_RATES,
+  PMI_THRESHOLD_PERCENT,
+  type EstimatedCosts,
+  type MortgageInputs,
+} from "./mortgage";
 import { formatMoney } from "./format";
 
 const TERMS = [30, 20, 15, 10];
 
-const DEFAULTS: MortgageInputs = {
+type FormState = Omit<MortgageInputs, keyof EstimatedCosts>;
+
+const DEFAULTS: FormState = {
   homePrice: 400_000,
   downPaymentPercent: 20,
   annualRatePercent: 6.5,
   termYears: 30,
-  propertyTaxPercent: 1,
-  insurancePercent: 0.35,
-  pmiPercent: 0.5,
   hoaMonthly: 0,
 };
 
+const ESTIMATE_NOTES: Record<keyof EstimatedCosts, string> = {
+  propertyTaxYearly: `Estimated at ${ESTIMATE_RATES.propertyTaxPercentOfPrice}% of price`,
+  insuranceYearly: `Estimated at ${ESTIMATE_RATES.insurancePercentOfPrice}% of price`,
+  pmiMonthly: `Estimated at ${ESTIMATE_RATES.pmiPercentOfLoan}% of loan per year`,
+};
+
 export default function App() {
-  const [inputs, setInputs] = useState<MortgageInputs>(DEFAULTS);
-  const set = <K extends keyof MortgageInputs>(key: K) => (value: MortgageInputs[K]) =>
+  const [inputs, setInputs] = useState<FormState>(DEFAULTS);
+  // Dollar amounts the user typed. A cost without one follows its percentage estimate,
+  // so it keeps up with price and down-payment changes until the user takes it over.
+  const [overrides, setOverrides] = useState<Partial<EstimatedCosts>>({});
+  const set = <K extends keyof FormState>(key: K) => (value: FormState[K]) =>
     setInputs((prev) => ({ ...prev, [key]: value }));
 
-  const payment = useMemo(() => calculatePayment(inputs), [inputs]);
+  const estimates = estimateCosts(inputs.homePrice, inputs.downPaymentPercent);
+  const costs: EstimatedCosts = { ...estimates, ...overrides };
+
+  const costField = (key: keyof EstimatedCosts) => ({
+    value: costs[key],
+    onChange: (v: number) => setOverrides((prev) => ({ ...prev, [key]: v })),
+    note:
+      overrides[key] === undefined ? (
+        ESTIMATE_NOTES[key]
+      ) : (
+        <>
+          Your amount ·{" "}
+          <button
+            type="button"
+            className="link-button"
+            onClick={() =>
+              setOverrides(({ [key]: _dropped, ...rest }) => rest)
+            }
+          >
+            use estimate ({formatMoney(estimates[key], 0)})
+          </button>
+        </>
+      ),
+  });
+
+  const payment = calculatePayment({ ...inputs, ...costs });
   // The percent is the source of truth, so changing the price keeps the same down-payment share.
   const downPaymentDollars = (inputs.homePrice * inputs.downPaymentPercent) / 100;
   const pmiApplies = inputs.downPaymentPercent < PMI_THRESHOLD_PERCENT;
@@ -76,13 +116,13 @@ export default function App() {
 
           <details className="advanced">
             <summary>Advanced options</summary>
-            <p className="hint">Defaults are typical estimates. Change them to match your situation.</p>
+            <p className="hint">Amounts start as typical estimates. Enter your own to replace them.</p>
             <div className="field-pair">
-              <NumberField id="tax" label="Property tax (yearly)" suffix="% of price" decimals={3} step={0.05} value={inputs.propertyTaxPercent} onChange={set("propertyTaxPercent")} />
-              <NumberField id="insurance" label="Insurance (yearly)" suffix="% of price" decimals={3} step={0.05} value={inputs.insurancePercent} onChange={set("insurancePercent")} />
+              <NumberField id="tax" label="Property tax" prefix="$" suffix="/yr" step={100} {...costField("propertyTaxYearly")} />
+              <NumberField id="insurance" label="Homeowners insurance" prefix="$" suffix="/yr" step={100} {...costField("insuranceYearly")} />
             </div>
             <div className="field-pair">
-              <NumberField id="pmi" label="PMI (yearly)" suffix="% of loan" decimals={3} step={0.05} value={inputs.pmiPercent} onChange={set("pmiPercent")} />
+              <NumberField id="pmi" label="PMI" prefix="$" suffix="/mo" step={10} {...costField("pmiMonthly")} />
               <NumberField id="hoa" label="HOA fees" prefix="$" suffix="/mo" step={25} value={inputs.hoaMonthly} onChange={set("hoaMonthly")} />
             </div>
             <p className="hint">
@@ -92,7 +132,7 @@ export default function App() {
             </p>
           </details>
 
-          <button type="button" className="reset" onClick={() => setInputs(DEFAULTS)}>Reset to defaults</button>
+          <button type="button" className="reset" onClick={() => { setInputs(DEFAULTS); setOverrides({}); }}>Reset to defaults</button>
         </form>
 
         <section className="results" aria-live="polite">

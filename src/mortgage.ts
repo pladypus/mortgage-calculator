@@ -3,12 +3,10 @@ export interface MortgageInputs {
   downPaymentPercent: number;
   annualRatePercent: number;
   termYears: number;
-  /** Annual property tax as a percent of home price. */
-  propertyTaxPercent: number;
-  /** Annual homeowners insurance as a percent of home price. */
-  insurancePercent: number;
-  /** Annual PMI as a percent of the loan amount; only charged under 20% down. */
-  pmiPercent: number;
+  propertyTaxYearly: number;
+  insuranceYearly: number;
+  /** Only charged while the down payment is under 20%. */
+  pmiMonthly: number;
   hoaMonthly: number;
 }
 
@@ -22,14 +20,36 @@ export interface MonthlyPayment {
   total: number;
 }
 
+export type EstimatedCosts = Pick<MortgageInputs, "propertyTaxYearly" | "insuranceYearly" | "pmiMonthly">;
+
 export const PMI_THRESHOLD_PERCENT = 20;
+
+/** Rates used to estimate the advanced costs until the user enters their own amounts. */
+export const ESTIMATE_RATES = {
+  propertyTaxPercentOfPrice: 1,
+  insurancePercentOfPrice: 0.35,
+  pmiPercentOfLoan: 0.5,
+} as const;
 
 const safe = (n: number) => (Number.isFinite(n) && n > 0 ? n : 0);
 
+function loanAmountFor(homePrice: number, downPaymentPercent: number) {
+  const downPct = Math.min(safe(downPaymentPercent), 100);
+  return safe(homePrice) * (1 - downPct / 100);
+}
+
+export function estimateCosts(homePrice: number, downPaymentPercent: number): EstimatedCosts {
+  const price = safe(homePrice);
+  const loan = loanAmountFor(homePrice, downPaymentPercent);
+  return {
+    propertyTaxYearly: (price * ESTIMATE_RATES.propertyTaxPercentOfPrice) / 100,
+    insuranceYearly: (price * ESTIMATE_RATES.insurancePercentOfPrice) / 100,
+    pmiMonthly: (loan * ESTIMATE_RATES.pmiPercentOfLoan) / 100 / 12,
+  };
+}
+
 export function calculatePayment(inputs: MortgageInputs): MonthlyPayment {
-  const price = safe(inputs.homePrice);
-  const downPct = Math.min(safe(inputs.downPaymentPercent), 100);
-  const loanAmount = price * (1 - downPct / 100);
+  const loanAmount = loanAmountFor(inputs.homePrice, inputs.downPaymentPercent);
   const months = Math.round(safe(inputs.termYears) * 12);
   const r = safe(inputs.annualRatePercent) / 100 / 12;
 
@@ -41,12 +61,10 @@ export function calculatePayment(inputs: MortgageInputs): MonthlyPayment {
         : (loanAmount * r * (1 + r) ** months) / ((1 + r) ** months - 1);
   }
 
-  const propertyTax = (price * safe(inputs.propertyTaxPercent)) / 100 / 12;
-  const insurance = (price * safe(inputs.insurancePercent)) / 100 / 12;
+  const propertyTax = safe(inputs.propertyTaxYearly) / 12;
+  const insurance = safe(inputs.insuranceYearly) / 12;
   const pmi =
-    downPct < PMI_THRESHOLD_PERCENT
-      ? (loanAmount * safe(inputs.pmiPercent)) / 100 / 12
-      : 0;
+    safe(inputs.downPaymentPercent) < PMI_THRESHOLD_PERCENT ? safe(inputs.pmiMonthly) : 0;
   const hoa = safe(inputs.hoaMonthly);
 
   return {

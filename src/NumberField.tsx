@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 
 interface Props {
   id: string;
@@ -10,13 +10,15 @@ interface Props {
   step?: number;
   /** Decimal places shown when the field isn't being edited. */
   decimals?: number;
+  /** Small line under the input, e.g. where a default came from. */
+  note?: ReactNode;
 }
 
 /**
  * A numeric input that keeps the user's raw text while focused, so derived
  * updates (e.g. the linked down-payment $/% pair) never fight the cursor.
  */
-export function NumberField({ id, label, value, onChange, prefix, suffix, step = 1, decimals = 0 }: Props) {
+export function NumberField({ id, label, value, onChange, prefix, suffix, step = 1, decimals = 0, note }: Props) {
   const [draft, setDraft] = useState<string | null>(null);
   const shown =
     draft ??
@@ -46,6 +48,7 @@ export function NumberField({ id, label, value, onChange, prefix, suffix, step =
         />
         {suffix && <span className="affix">{suffix}</span>}
       </div>
+      {note && <p className="field-note">{note}</p>}
     </div>
   );
 }

@@ -77,3 +77,8 @@ h1 { margin: 0; font-size: 1.75rem; }
 .swatch { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 10px; vertical-align: 0; }
 .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 footer { margin-top: 24px; text-align: center; font-size: 0.8rem; color: var(--text-muted); }
+.field-note { margin: 0; font-size: 0.78rem; color: var(--text-muted); }
+.link-button {
+  background: none; border: 0; padding: 0; font: inherit; color: var(--accent);
+  cursor: pointer; text-decoration: underline; text-underline-offset: 2px;
+}
