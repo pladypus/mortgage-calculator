@@ -2,7 +2,7 @@ import { useLayoutEffect, useRef, useState, type ReactNode } from "react";
 import { caretAfterDigits, cleanNumberText, groupThousands, numberCharsBefore } from "./format";
 import { fieldClass, fieldLabelClass, inputClass, inputWrapClass } from "./classes";
 
-const affixClass = "whitespace-nowrap px-0.5 text-[0.9rem] text-fg-muted";
+const affixClass = "whitespace-nowrap px-0.5 text-sm text-zinc-500 dark:text-zinc-400";
 
 interface Props {
   id: string;
@@ -93,7 +93,7 @@ export function NumberField({
         />
         {suffix && <span className={affixClass}>{suffix}</span>}
       </div>
-      {note && <p className="text-[0.78rem] text-fg-muted">{note}</p>}
+      {note && <p className="text-xs text-zinc-500 dark:text-zinc-400">{note}</p>}
     </div>
   );
 }

@@ -64,7 +64,7 @@ export default function App() {
           Your amount ·{" "}
           <button
             type="button"
-            className="cursor-pointer text-accent underline underline-offset-2"
+            className="cursor-pointer text-sky-600 underline underline-offset-2"
             onClick={() =>
               setOverrides(({ [key]: _dropped, ...rest }) => rest)
             }
@@ -80,16 +80,16 @@ export default function App() {
   const downPaymentDollars = (inputs.homePrice * inputs.downPaymentPercent) / 100;
 
   return (
-    <main className="mx-auto max-w-[960px] px-4 py-8">
+    <main className="mx-auto max-w-4xl px-4 py-8">
       <header className="flex items-start justify-between gap-4">
         <div>
-          <h1 className="text-[1.75rem] font-bold">Mortgage calculator</h1>
-          <p className="mt-1 mb-6 text-fg-secondary">Estimate your monthly payment. Results update as you type.</p>
+          <h1 className="text-3xl font-bold">Mortgage calculator</h1>
+          <p className="mt-1 mb-6 text-zinc-600 dark:text-zinc-300">Estimate your monthly payment. Results update as you type.</p>
         </div>
         <ThemeToggle theme={theme} onToggle={toggle} />
       </header>
 
-      <div className="grid grid-cols-1 gap-8 rounded-xl border border-line bg-surface-2 p-4 min-[721px]:grid-cols-2 min-[721px]:p-6">
+      <div className="grid grid-cols-1 gap-8 rounded-xl border border-zinc-300 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-4 md:grid-cols-2 md:p-6">
         <form className="flex min-w-0 flex-col gap-4" onSubmit={(e) => e.preventDefault()}>
           <NumberField id="price" label="Home price" prefix="$" value={inputs.homePrice} onChange={set("homePrice")} step={1000} />
 
@@ -124,7 +124,7 @@ export default function App() {
                     background while inheriting dark-mode text, so give both explicit colours. */}
                 <select
                   id="term"
-                  className={`${inputClass} cursor-pointer bg-surface-2 [&_option]:bg-surface-2 [&_option]:text-fg`}
+                  className={`${inputClass} cursor-pointer bg-white dark:bg-zinc-900 *:bg-white dark:*:bg-zinc-900 *:text-zinc-900 dark:*:text-zinc-100`}
                   value={inputs.termYears}
                   onChange={(e) => set("termYears")(Number(e.target.value))}
                 >
@@ -136,9 +136,9 @@ export default function App() {
             </div>
           </div>
 
-          <details className="group border-t border-line pt-3">
-            <summary className="cursor-pointer font-semibold text-fg-secondary group-open:mb-3">Advanced options</summary>
-            <p className="mb-3 text-[0.85rem] text-fg-muted">Amounts start as typical estimates. Enter your own to replace them.</p>
+          <details className="group border-t border-zinc-300 dark:border-zinc-800 pt-3">
+            <summary className="cursor-pointer font-semibold text-zinc-600 dark:text-zinc-300 group-open:mb-3">Advanced options</summary>
+            <p className="mb-3 text-sm text-zinc-500 dark:text-zinc-400">Amounts start as typical estimates. Enter your own to replace them.</p>
             <div className={`${fieldPairClass} mb-3`}>
               <NumberField id="tax" label="Property tax" prefix="$" suffix="/yr" step={100} {...costField("propertyTaxYearly")} />
               <NumberField id="insurance" label="Homeowners insurance" prefix="$" suffix="/yr" step={100} {...costField("insuranceYearly")} />
@@ -151,7 +151,7 @@ export default function App() {
 
           <button
             type="button"
-            className="cursor-pointer self-start rounded-lg border border-line px-3.5 py-2 text-fg-secondary hover:border-fg-muted hover:text-fg"
+            className="cursor-pointer self-start rounded-lg border border-zinc-300 dark:border-zinc-800 px-3.5 py-2 text-zinc-600 dark:text-zinc-300 hover:border-zinc-500 dark:hover:border-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100"
             onClick={() => { setInputs(DEFAULTS); setOverrides({}); }}
           >
             Reset to defaults
@@ -159,21 +159,21 @@ export default function App() {
         </form>
 
         <section className="min-w-0" aria-live="polite">
-          <p className="text-[0.9rem] text-fg-secondary">Estimated monthly payment</p>
-          <p className="mt-1 text-[2.5rem] font-bold tabular-nums">{formatMoney(payment.total)}</p>
-          <p className="mt-1 mb-5 text-[0.9rem] text-fg-muted">Loan amount {formatMoney(payment.loanAmount, 0)}</p>
+          <p className="text-sm text-zinc-600 dark:text-zinc-300">Estimated monthly payment</p>
+          <p className="mt-1 text-4xl font-bold tabular-nums">{formatMoney(payment.total)}</p>
+          <p className="mt-1 mb-5 text-sm text-zinc-500 dark:text-zinc-400">Loan amount {formatMoney(payment.loanAmount, 0)}</p>
           <PaymentChart payment={payment} theme={theme} />
         </section>
       </div>
 
-      <footer className="mt-6 text-center text-[0.8rem] text-fg-muted">
+      <footer className="mt-6 text-center text-xs text-zinc-500 dark:text-zinc-400">
         <p>Estimates only. Your actual payment depends on your lender, location and credit.</p>
         <p className="mt-2">
           <a
             href="https://github.com/pladypus/mortgage-calculator"
-            className="underline underline-offset-2 hover:text-fg focus-visible:rounded-xs focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+            className="underline underline-offset-2 hover:text-zinc-900 dark:hover:text-zinc-100 focus-visible:rounded-xs focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-600"
           >
-            <FontAwesomeIcon icon={faGithub} aria-hidden="true" className="mr-[0.5em]" />Source on GitHub
+            <FontAwesomeIcon icon={faGithub} aria-hidden="true" className="mr-1.5" />Source on GitHub
           </a>
         </p>
       </footer>

@@ -8,7 +8,14 @@ const PALETTE = {
   light: ["#2a78d6", "#eb6834", "#1baf7a", "#eda100", "#e87ba4"],
   dark: ["#3987e5", "#d95926", "#199e70", "#c98500", "#d55181"],
 };
-const SURFACE = { light: "#ffffff", dark: "#1a1a19" };
+// The card background (white / zinc-900), so slice gaps look cut out of the card.
+// Hex because SVG presentation attributes can't read CSS variables.
+const SURFACE = { light: "#ffffff", dark: "#18181b" };
+// Tooltip colours: the card's background, border and text in each theme.
+const TOOLTIP = {
+  light: { bg: "var(--color-white)", border: "var(--color-zinc-300)", text: "var(--color-zinc-900)" },
+  dark: { bg: "var(--color-zinc-900)", border: "var(--color-zinc-800)", text: "var(--color-zinc-100)" },
+};
 
 const PARTS = [
   { key: "principalAndInterest", label: "Principal & interest" },
@@ -19,7 +26,7 @@ const PARTS = [
 ] as const;
 
 /** Every legend cell: padding, rule and size. */
-const cell = "border-b border-line py-1.5 text-[0.92rem]";
+const cell = "border-b border-zinc-300 dark:border-zinc-800 py-1.5 text-sm";
 
 export function PaymentChart({ payment, theme: mode }: { payment: MonthlyPayment; theme: Theme }) {
   // Colour follows the part (fixed slot), never its rank, so hiding a zero slice repaints nothing.
@@ -28,7 +35,7 @@ export function PaymentChart({ payment, theme: mode }: { payment: MonthlyPayment
 
   return (
     <div className="flex flex-col gap-5">
-      <div className="relative mx-auto aspect-square w-full max-w-[260px]">
+      <div className="relative mx-auto aspect-square w-full max-w-3xs">
         <ResponsiveContainer width="100%" height="100%">
           <PieChart>
             <Pie
@@ -53,12 +60,12 @@ export function PaymentChart({ payment, theme: mode }: { payment: MonthlyPayment
                 return [`${formatMoney(v)} (${((v / payment.total) * 100).toFixed(1)}%)`, name];
               }}
               contentStyle={{
-                background: "var(--color-surface-2)",
-                border: "1px solid var(--color-line)",
+                background: TOOLTIP[mode].bg,
+                border: `1px solid ${TOOLTIP[mode].border}`,
                 borderRadius: 8,
-                color: "var(--color-fg)",
+                color: TOOLTIP[mode].text,
               }}
-              itemStyle={{ color: "var(--color-fg)" }}
+              itemStyle={{ color: TOOLTIP[mode].text }}
             />
           </PieChart>
         </ResponsiveContainer>
@@ -66,8 +73,8 @@ export function PaymentChart({ payment, theme: mode }: { payment: MonthlyPayment
           className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center"
           aria-hidden="true"
         >
-          <span className="text-[1.4rem] font-bold tabular-nums">{formatMoney(payment.total, 0)}</span>
-          <span className="text-[0.8rem] text-fg-muted">per month</span>
+          <span className="text-2xl font-bold tabular-nums">{formatMoney(payment.total, 0)}</span>
+          <span className="text-xs text-zinc-500 dark:text-zinc-400">per month</span>
         </div>
       </div>
 
@@ -79,17 +86,17 @@ export function PaymentChart({ payment, theme: mode }: { payment: MonthlyPayment
             const muted = s.value <= 0;
             return (
               <tr key={s.key}>
-                <th scope="row" className={`${cell} text-left font-normal ${muted ? "text-fg-muted" : "text-fg"}`}>
+                <th scope="row" className={`${cell} text-left font-normal ${muted ? "text-zinc-500 dark:text-zinc-400" : "text-zinc-900 dark:text-zinc-100"}`}>
                   <span
-                    className={`mr-2.5 inline-block size-2.5 rounded-[3px] align-baseline ${muted ? "opacity-35" : ""}`}
+                    className={`mr-2.5 inline-block size-2.5 rounded-sm align-baseline ${muted ? "opacity-35" : ""}`}
                     style={{ background: s.color }}
                   />
                   {s.label}
                 </th>
-                <td className={`${cell} text-right ${muted ? "text-fg-muted" : "text-fg"}`}>
+                <td className={`${cell} text-right ${muted ? "text-zinc-500 dark:text-zinc-400" : "text-zinc-900 dark:text-zinc-100"}`}>
                   {formatMoney(s.value)}
                 </td>
-                <td className={`${cell} w-14 text-right ${muted ? "text-fg-muted" : "text-fg-secondary"}`}>
+                <td className={`${cell} w-14 text-right ${muted ? "text-zinc-500 dark:text-zinc-400" : "text-zinc-600 dark:text-zinc-300"}`}>
                   {payment.total > 0 ? `${((s.value / payment.total) * 100).toFixed(0)}%` : "—"}
                 </td>
               </tr>

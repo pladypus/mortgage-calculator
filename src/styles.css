@@ -1,44 +1,18 @@
 @import "tailwindcss";
 
-/* Light tokens. Each --color-* becomes a utility (bg-surface-2, text-fg-muted, border-line…). */
 @theme {
   --font-sans: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-  --color-surface-1: #f6f6f4;
-  --color-surface-2: #ffffff;
-  --color-line: #dddcd6;
-  --color-fg: #1a1a19;
-  --color-fg-secondary: #55544e;
-  --color-fg-muted: #8a897f;
-  --color-accent: #2a78d6;
 }
 
-/* Dark tokens apply when the browser prefers dark and the user hasn't chosen light,
-   or when the user has chosen dark with the toggle (data-theme on <html>).
-   Utilities read the variables, so redefining them re-themes everything. */
-@layer base {
-  :root {
-    color-scheme: light;
+/* dark: applies when the user has chosen dark with the toggle (data-theme on <html>),
+   or when the browser prefers dark and the user hasn't chosen light. */
+@custom-variant dark {
+  &:where([data-theme="dark"], [data-theme="dark"] *) {
+    @slot;
   }
   @media (prefers-color-scheme: dark) {
-    :root:not([data-theme="light"]) {
-      --color-surface-1: #111110;
-      --color-surface-2: #1a1a19;
-      --color-line: #34332f;
-      --color-fg: #f0efec;
-      --color-fg-secondary: #c3c2b7;
-      --color-fg-muted: #8f8e85;
-      --color-accent: #3987e5;
-      color-scheme: dark;
+    &:where(:root:not([data-theme="light"]), :root:not([data-theme="light"]) *) {
+      @slot;
     }
-  }
-  :root[data-theme="dark"] {
-    --color-surface-1: #111110;
-    --color-surface-2: #1a1a19;
-    --color-line: #34332f;
-    --color-fg: #f0efec;
-    --color-fg-secondary: #c3c2b7;
-    --color-fg-muted: #8f8e85;
-    --color-accent: #3987e5;
-    color-scheme: dark;
   }
 }
