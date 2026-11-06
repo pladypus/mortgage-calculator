@@ -150,7 +150,11 @@ export default function App() {
         </section>
       </div>
 
-      <footer>Estimates only. Your actual payment depends on your lender, location and credit.</footer>
+      <footer>
+        Estimates only. Your actual payment depends on your lender, location and credit.
+        {' · '}
+        <a href="https://github.com/pladypus/mortgage-calculator">Source on GitHub</a>
+      </footer>
     </main>
   );
 }
