@@ -82,3 +82,7 @@ footer { margin-top: 24px; text-align: center; font-size: 0.8rem; color: var(--t
   background: none; border: 0; padding: 0; font: inherit; color: var(--accent);
   cursor: pointer; text-decoration: underline; text-underline-offset: 2px;
 }
+/* A transparent <select> makes the native option list fall back to a white
+   background while inheriting dark-mode text, so give both explicit colours. */
+.input-wrap select { background-color: var(--surface-2); cursor: pointer; }
+.input-wrap select option { background-color: var(--surface-2); color: var(--text-primary); }
