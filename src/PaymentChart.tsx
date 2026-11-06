@@ -18,14 +18,17 @@ const PARTS = [
   { key: "hoa", label: "HOA fees" },
 ] as const;
 
+/** Every legend cell: padding, rule and size. */
+const cell = "border-b border-line py-1.5 text-[0.92rem]";
+
 export function PaymentChart({ payment, theme: mode }: { payment: MonthlyPayment; theme: Theme }) {
   // Colour follows the part (fixed slot), never its rank, so hiding a zero slice repaints nothing.
   const slices = PARTS.map((p, i) => ({ ...p, value: payment[p.key], color: PALETTE[mode][i] }));
   const visible = slices.filter((s) => s.value > 0);
 
   return (
-    <div className="chart">
-      <div className="donut">
+    <div className="flex flex-col gap-5">
+      <div className="relative mx-auto aspect-square w-full max-w-[260px]">
         <ResponsiveContainer width="100%" height="100%">
           <PieChart>
             <Pie
@@ -50,36 +53,48 @@ export function PaymentChart({ payment, theme: mode }: { payment: MonthlyPayment
                 return [`${formatMoney(v)} (${((v / payment.total) * 100).toFixed(1)}%)`, name];
               }}
               contentStyle={{
-                background: "var(--surface-2)",
-                border: "1px solid var(--border)",
+                background: "var(--color-surface-2)",
+                border: "1px solid var(--color-line)",
                 borderRadius: 8,
-                color: "var(--text-primary)",
+                color: "var(--color-fg)",
               }}
-              itemStyle={{ color: "var(--text-primary)" }}
+              itemStyle={{ color: "var(--color-fg)" }}
             />
           </PieChart>
         </ResponsiveContainer>
-        <div className="donut-center" aria-hidden="true">
-          <span className="donut-total">{formatMoney(payment.total, 0)}</span>
-          <span className="donut-caption">per month</span>
+        <div
+          className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center"
+          aria-hidden="true"
+        >
+          <span className="text-[1.4rem] font-bold tabular-nums">{formatMoney(payment.total, 0)}</span>
+          <span className="text-[0.8rem] text-fg-muted">per month</span>
         </div>
       </div>
 
-      <table className="legend">
+      <table className="w-full border-collapse tabular-nums">
         <caption className="sr-only">Monthly payment breakdown</caption>
         <tbody>
-          {slices.map((s) => (
-            <tr key={s.key} className={s.value > 0 ? "" : "muted"}>
-              <th scope="row">
-                <span className="swatch" style={{ background: s.color }} />
-                {s.label}
-              </th>
-              <td>{formatMoney(s.value)}</td>
-              <td className="pct">
-                {payment.total > 0 ? `${((s.value / payment.total) * 100).toFixed(0)}%` : "—"}
-              </td>
-            </tr>
-          ))}
+          {slices.map((s) => {
+            // Zero parts stay listed but greyed out, since their slice is hidden.
+            const muted = s.value <= 0;
+            return (
+              <tr key={s.key}>
+                <th scope="row" className={`${cell} text-left font-normal ${muted ? "text-fg-muted" : "text-fg"}`}>
+                  <span
+                    className={`mr-2.5 inline-block size-2.5 rounded-[3px] align-baseline ${muted ? "opacity-35" : ""}`}
+                    style={{ background: s.color }}
+                  />
+                  {s.label}
+                </th>
+                <td className={`${cell} text-right ${muted ? "text-fg-muted" : "text-fg"}`}>
+                  {formatMoney(s.value)}
+                </td>
+                <td className={`${cell} w-14 text-right ${muted ? "text-fg-muted" : "text-fg-secondary"}`}>
+                  {payment.total > 0 ? `${((s.value / payment.total) * 100).toFixed(0)}%` : "—"}
+                </td>
+              </tr>
+            );
+          })}
         </tbody>
       </table>
     </div>

@@ -1,5 +1,8 @@
 import { useLayoutEffect, useRef, useState, type ReactNode } from "react";
 import { caretAfterDigits, cleanNumberText, groupThousands, numberCharsBefore } from "./format";
+import { fieldClass, fieldLabelClass, inputClass, inputWrapClass } from "./classes";
+
+const affixClass = "whitespace-nowrap px-0.5 text-[0.9rem] text-fg-muted";
 
 interface Props {
   id: string;
@@ -57,12 +60,13 @@ export function NumberField({
   const commit = (n: number) => onChange(Number.isFinite(n) ? n : 0);
 
   return (
-    <div className="field">
-      <label htmlFor={id}>{label}</label>
-      <div className="input-wrap">
-        {prefix && <span className="affix">{prefix}</span>}
+    <div className={fieldClass}>
+      <label htmlFor={id} className={fieldLabelClass}>{label}</label>
+      <div className={inputWrapClass}>
+        {prefix && <span className={affixClass}>{prefix}</span>}
         <input
           ref={inputRef}
+          className={inputClass}
           id={id}
           type="text"
           inputMode="decimal"
@@ -87,9 +91,9 @@ export function NumberField({
             commit(n);
           }}
         />
-        {suffix && <span className="affix">{suffix}</span>}
+        {suffix && <span className={affixClass}>{suffix}</span>}
       </div>
-      {note && <p className="field-note">{note}</p>}
+      {note && <p className="text-[0.78rem] text-fg-muted">{note}</p>}
     </div>
   );
 }

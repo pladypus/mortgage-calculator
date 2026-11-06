@@ -1,111 +1,44 @@
-:root {
-  --surface-1: #f6f6f4;
-  --surface-2: #ffffff;
-  --border: #dddcd6;
-  --text-primary: #1a1a19;
-  --text-secondary: #55544e;
-  --text-muted: #8a897f;
-  --accent: #2a78d6;
-  color-scheme: light;
-  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+@import "tailwindcss";
+
+/* Light tokens. Each --color-* becomes a utility (bg-surface-2, text-fg-muted, border-line…). */
+@theme {
+  --font-sans: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --color-surface-1: #f6f6f4;
+  --color-surface-2: #ffffff;
+  --color-line: #dddcd6;
+  --color-fg: #1a1a19;
+  --color-fg-secondary: #55544e;
+  --color-fg-muted: #8a897f;
+  --color-accent: #2a78d6;
 }
+
 /* Dark tokens apply when the browser prefers dark and the user hasn't chosen light,
-   or when the user has chosen dark with the toggle (data-theme on <html>). */
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
-    --surface-1: #111110;
-    --surface-2: #1a1a19;
-    --border: #34332f;
-    --text-primary: #f0efec;
-    --text-secondary: #c3c2b7;
-    --text-muted: #8f8e85;
-    --accent: #3987e5;
+   or when the user has chosen dark with the toggle (data-theme on <html>).
+   Utilities read the variables, so redefining them re-themes everything. */
+@layer base {
+  :root {
+    color-scheme: light;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --color-surface-1: #111110;
+      --color-surface-2: #1a1a19;
+      --color-line: #34332f;
+      --color-fg: #f0efec;
+      --color-fg-secondary: #c3c2b7;
+      --color-fg-muted: #8f8e85;
+      --color-accent: #3987e5;
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --color-surface-1: #111110;
+    --color-surface-2: #1a1a19;
+    --color-line: #34332f;
+    --color-fg: #f0efec;
+    --color-fg-secondary: #c3c2b7;
+    --color-fg-muted: #8f8e85;
+    --color-accent: #3987e5;
     color-scheme: dark;
   }
 }
-:root[data-theme="dark"] {
-  --surface-1: #111110;
-  --surface-2: #1a1a19;
-  --border: #34332f;
-  --text-primary: #f0efec;
-  --text-secondary: #c3c2b7;
-  --text-muted: #8f8e85;
-  --accent: #3987e5;
-  color-scheme: dark;
-}
-* { box-sizing: border-box; }
-body { margin: 0; background: var(--surface-1); color: var(--text-primary); }
-.page { max-width: 960px; margin: 0 auto; padding: 32px 16px; }
-h1 { margin: 0; font-size: 1.75rem; }
-.subtitle { margin: 4px 0 24px; color: var(--text-secondary); }
-.card {
-  display: grid; grid-template-columns: 1fr 1fr; gap: 32px;
-  background: var(--surface-2); border: 1px solid var(--border); border-radius: 12px; padding: 24px;
-}
-@media (max-width: 720px) { .card { grid-template-columns: 1fr; padding: 16px; } }
-.form { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
-.field-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-.field { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
-.field label { font-size: 0.85rem; color: var(--text-secondary); }
-.input-wrap {
-  display: flex; align-items: center; border: 1px solid var(--border); border-radius: 8px;
-  background: var(--surface-2); padding: 0 10px; min-height: 42px;
-}
-.input-wrap:focus-within { border-color: var(--accent); box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 30%, transparent); }
-.input-wrap input, .input-wrap select {
-  flex: 1; min-width: 0; border: 0; outline: 0; background: transparent; color: inherit;
-  font: inherit; font-size: 1rem; padding: 8px 0;
-}
-.affix { color: var(--text-muted); font-size: 0.9rem; white-space: nowrap; padding: 0 2px; }
-.advanced { border-top: 1px solid var(--border); padding-top: 12px; }
-.advanced summary { cursor: pointer; font-weight: 600; color: var(--text-secondary); }
-.advanced[open] summary { margin-bottom: 12px; }
-.advanced .field-pair { margin-bottom: 12px; }
-.hint { margin: 0 0 12px; font-size: 0.85rem; color: var(--text-muted); }
-.reset {
-  align-self: flex-start; background: none; border: 1px solid var(--border); color: var(--text-secondary);
-  border-radius: 8px; padding: 8px 14px; font: inherit; cursor: pointer;
-}
-.reset:hover { color: var(--text-primary); border-color: var(--text-muted); }
-.results { min-width: 0; }
-.results-label { margin: 0; color: var(--text-secondary); font-size: 0.9rem; }
-.results-total { margin: 4px 0 0; font-size: 2.5rem; font-weight: 700; font-variant-numeric: tabular-nums; }
-.results-loan { margin: 4px 0 20px; color: var(--text-muted); font-size: 0.9rem; }
-.chart { display: flex; flex-direction: column; gap: 20px; }
-.donut { position: relative; width: 100%; max-width: 260px; aspect-ratio: 1; margin: 0 auto; }
-.donut-center {
-  position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center;
-  justify-content: center; pointer-events: none;
-}
-.donut-total { font-size: 1.4rem; font-weight: 700; font-variant-numeric: tabular-nums; }
-.donut-caption { font-size: 0.8rem; color: var(--text-muted); }
-.legend { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
-.legend th, .legend td { padding: 6px 0; border-bottom: 1px solid var(--border); font-size: 0.92rem; }
-.legend th { text-align: left; font-weight: 400; color: var(--text-primary); }
-.legend td { text-align: right; color: var(--text-primary); }
-.legend td.pct { width: 3.5rem; color: var(--text-secondary); }
-.legend tr.muted th, .legend tr.muted td { color: var(--text-muted); }
-.legend tr.muted .swatch { opacity: 0.35; }
-.swatch { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 10px; vertical-align: 0; }
-.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
-footer { margin-top: 24px; text-align: center; font-size: 0.8rem; color: var(--text-muted); }
-footer a { color: inherit; text-underline-offset: 2px; }
-footer a:hover { color: var(--text-primary); }
-footer a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 2px; }
-.field-note { margin: 0; font-size: 0.78rem; color: var(--text-muted); }
-.link-button {
-  background: none; border: 0; padding: 0; font: inherit; color: var(--accent);
-  cursor: pointer; text-decoration: underline; text-underline-offset: 2px;
-}
-/* A transparent <select> makes the native option list fall back to a white
-   background while inheriting dark-mode text, so give both explicit colours. */
-.input-wrap select { background-color: var(--surface-2); cursor: pointer; }
-.input-wrap select option { background-color: var(--surface-2); color: var(--text-primary); }
-.page-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
-.theme-toggle {
-  flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center;
-  width: 40px; height: 40px; border-radius: 10px; cursor: pointer;
-  background: var(--surface-2); color: var(--text-secondary); border: 1px solid var(--border);
-}
-.theme-toggle:hover { color: var(--text-primary); border-color: var(--text-muted); }
-.theme-toggle:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }

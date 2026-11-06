@@ -1,4 +1,6 @@
 import { useState } from "react";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faGithub } from "@fortawesome/free-brands-svg-icons";
 import { NumberField } from "./NumberField";
 import { PaymentChart } from "./PaymentChart";
 import {
@@ -12,6 +14,7 @@ import {
 import { formatMoney } from "./format";
 import { useTheme } from "./theme";
 import { ThemeToggle } from "./ThemeToggle";
+import { fieldClass, fieldLabelClass, fieldPairClass, inputClass, inputWrapClass } from "./classes";
 
 const TERMS = [30, 20, 15, 10];
 
@@ -61,7 +64,7 @@ export default function App() {
           Your amount ·{" "}
           <button
             type="button"
-            className="link-button"
+            className="cursor-pointer text-accent underline underline-offset-2"
             onClick={() =>
               setOverrides(({ [key]: _dropped, ...rest }) => rest)
             }
@@ -77,20 +80,20 @@ export default function App() {
   const downPaymentDollars = (inputs.homePrice * inputs.downPaymentPercent) / 100;
 
   return (
-    <main className="page">
-      <header className="page-header">
+    <main className="mx-auto max-w-[960px] px-4 py-8">
+      <header className="flex items-start justify-between gap-4">
         <div>
-          <h1>Mortgage calculator</h1>
-          <p className="subtitle">Estimate your monthly payment. Results update as you type.</p>
+          <h1 className="text-[1.75rem] font-bold">Mortgage calculator</h1>
+          <p className="mt-1 mb-6 text-fg-secondary">Estimate your monthly payment. Results update as you type.</p>
         </div>
         <ThemeToggle theme={theme} onToggle={toggle} />
       </header>
 
-      <div className="card">
-        <form className="form" onSubmit={(e) => e.preventDefault()}>
+      <div className="grid grid-cols-1 gap-8 rounded-xl border border-line bg-surface-2 p-4 min-[721px]:grid-cols-2 min-[721px]:p-6">
+        <form className="flex min-w-0 flex-col gap-4" onSubmit={(e) => e.preventDefault()}>
           <NumberField id="price" label="Home price" prefix="$" value={inputs.homePrice} onChange={set("homePrice")} step={1000} />
 
-          <div className="field-pair">
+          <div className={fieldPairClass}>
             <NumberField
               id="down-dollars"
               label="Down payment"
@@ -112,12 +115,19 @@ export default function App() {
             />
           </div>
 
-          <div className="field-pair">
+          <div className={fieldPairClass}>
             <NumberField id="rate" label="Interest rate" suffix="%" decimals={3} step={0.125} value={inputs.annualRatePercent} onChange={set("annualRatePercent")} />
-            <div className="field">
-              <label htmlFor="term">Loan term</label>
-              <div className="input-wrap">
-                <select id="term" value={inputs.termYears} onChange={(e) => set("termYears")(Number(e.target.value))}>
+            <div className={fieldClass}>
+              <label htmlFor="term" className={fieldLabelClass}>Loan term</label>
+              <div className={inputWrapClass}>
+                {/* A transparent <select> makes the native option list fall back to a white
+                    background while inheriting dark-mode text, so give both explicit colours. */}
+                <select
+                  id="term"
+                  className={`${inputClass} cursor-pointer bg-surface-2 [&_option]:bg-surface-2 [&_option]:text-fg`}
+                  value={inputs.termYears}
+                  onChange={(e) => set("termYears")(Number(e.target.value))}
+                >
                   {TERMS.map((t) => (
                     <option key={t} value={t}>{t} years</option>
                   ))}
@@ -126,34 +136,45 @@ export default function App() {
             </div>
           </div>
 
-          <details className="advanced">
-            <summary>Advanced options</summary>
-            <p className="hint">Amounts start as typical estimates. Enter your own to replace them.</p>
-            <div className="field-pair">
+          <details className="group border-t border-line pt-3">
+            <summary className="cursor-pointer font-semibold text-fg-secondary group-open:mb-3">Advanced options</summary>
+            <p className="mb-3 text-[0.85rem] text-fg-muted">Amounts start as typical estimates. Enter your own to replace them.</p>
+            <div className={`${fieldPairClass} mb-3`}>
               <NumberField id="tax" label="Property tax" prefix="$" suffix="/yr" step={100} {...costField("propertyTaxYearly")} />
               <NumberField id="insurance" label="Homeowners insurance" prefix="$" suffix="/yr" step={100} {...costField("insuranceYearly")} />
             </div>
-            <div className="field-pair">
+            <div className={`${fieldPairClass} mb-3`}>
               <NumberField id="pmi" label="PMI" prefix="$" suffix="/mo" step={10} {...costField("pmiMonthly")} />
               <NumberField id="hoa" label="HOA fees" prefix="$" suffix="/mo" step={25} value={inputs.hoaMonthly} onChange={set("hoaMonthly")} />
             </div>
           </details>
 
-          <button type="button" className="reset" onClick={() => { setInputs(DEFAULTS); setOverrides({}); }}>Reset to defaults</button>
+          <button
+            type="button"
+            className="cursor-pointer self-start rounded-lg border border-line px-3.5 py-2 text-fg-secondary hover:border-fg-muted hover:text-fg"
+            onClick={() => { setInputs(DEFAULTS); setOverrides({}); }}
+          >
+            Reset to defaults
+          </button>
         </form>
 
-        <section className="results" aria-live="polite">
-          <p className="results-label">Estimated monthly payment</p>
-          <p className="results-total">{formatMoney(payment.total)}</p>
-          <p className="results-loan">Loan amount {formatMoney(payment.loanAmount, 0)}</p>
+        <section className="min-w-0" aria-live="polite">
+          <p className="text-[0.9rem] text-fg-secondary">Estimated monthly payment</p>
+          <p className="mt-1 text-[2.5rem] font-bold tabular-nums">{formatMoney(payment.total)}</p>
+          <p className="mt-1 mb-5 text-[0.9rem] text-fg-muted">Loan amount {formatMoney(payment.loanAmount, 0)}</p>
           <PaymentChart payment={payment} theme={theme} />
         </section>
       </div>
 
-      <footer>
+      <footer className="mt-6 text-center text-[0.8rem] text-fg-muted">
         Estimates only. Your actual payment depends on your lender, location and credit.
         {' · '}
-        <a href="https://github.com/pladypus/mortgage-calculator">Source on GitHub</a>
+        <a
+          href="https://github.com/pladypus/mortgage-calculator"
+          className="underline underline-offset-2 hover:text-fg focus-visible:rounded-xs focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+        >
+          <FontAwesomeIcon icon={faGithub} aria-hidden="true" className="mr-[0.5em]" />Source on GitHub
+        </a>
       </footer>
     </main>
   );
