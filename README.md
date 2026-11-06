@@ -1,7 +1,7 @@
 # Mortgage calculator
 
 A simple monthly-mortgage-payment calculator with a breakdown chart. Live at
-https://mortgages.pladypus.dev.
+https://mortgage.pladypus.dev.
 
 ## Run locally with Nix
 
@@ -37,5 +37,5 @@ publishes `dist/` to GitHub Pages. `public/CNAME` pins the custom domain.
 One-time setup:
 
 1. Repo → Settings → Pages → Source: **GitHub Actions**.
-2. DNS for `pladypus.dev`: add a `CNAME` record `mortgages` → `<your-github-username>.github.io`.
+2. DNS for `pladypus.dev`: add a `CNAME` record `mortgage` → `<your-github-username>.github.io`.
 3. Once GitHub has issued the certificate, tick **Enforce HTTPS** on the Pages settings page.
