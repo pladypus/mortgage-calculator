@@ -4,6 +4,10 @@ on:
   push:
     branches: [main]
   workflow_dispatch:
+  # Rebuild daily to pick up Freddie Mac's weekly national-average rates. They're
+  # normally out Thursdays at noon ET, but holiday weeks move the release.
+  schedule:
+    - cron: "0 21 * * *"
 
 permissions:
   contents: read
@@ -25,6 +29,11 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm test
+      # A scheduled run exists only to refresh the rates, so if that fails, stop
+      # and leave the live site as it is. A push still deploys; the page then
+      # falls back to its built-in default rate.
+      - run: npm run rates
+        continue-on-error: ${{ github.event_name != 'schedule' }}
       - run: npm run build
       - uses: actions/upload-pages-artifact@v3
         with:

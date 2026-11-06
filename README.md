@@ -29,10 +29,18 @@ npm run build   # production build into dist/
 
 The payment math lives in `src/mortgage.ts` and is covered by `src/mortgage.test.ts`.
 
+The default interest rate is the national average from Freddie Mac's weekly
+[mortgage survey](https://www.freddiemac.com/pmms). Freddie Mac doesn't allow
+cross-origin requests, so `npm run rates` downloads it into `public/rates.json`
+(git-ignored) and the page loads that file on startup. Without the file, the
+rate defaults to 6.5%. Run `npm run rates` once to see the real average locally.
+
 ## Deploy
 
 Every push to `main` runs `.github/workflows/deploy.yml`, which tests, builds and
-publishes `dist/` to GitHub Pages. `public/CNAME` pins the custom domain.
+publishes `dist/` to GitHub Pages. `public/CNAME` pins the custom domain. It
+also runs daily to refresh the rates. GitHub disables scheduled workflows after
+60 days without repo activity; re-enable it from the Actions tab if that happens.
 
 One-time setup:
 

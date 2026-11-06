@@ -4,3 +4,5 @@ dist
 *.tsbuildinfo
 .direnv
 result
+public/rates.json
+public/rates.json

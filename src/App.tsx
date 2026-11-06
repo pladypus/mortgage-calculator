@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faGithub } from "@fortawesome/free-brands-svg-icons";
 import { NumberField } from "./NumberField";
@@ -12,18 +12,23 @@ import {
   type MortgageInputs,
 } from "./mortgage";
 import { formatMoney } from "./format";
+import { isMarketRates, rateForTerm, type MarketRates } from "./rates";
 import { useTheme } from "./theme";
 import { ThemeToggle } from "./ThemeToggle";
 import { fieldClass, fieldLabelClass, fieldPairClass, inputClass, inputWrapClass } from "./classes";
 
 const TERMS = [30, 20, 15, 10];
 
-type FormState = Omit<MortgageInputs, keyof EstimatedCosts>;
+// The rate is handled like the estimated costs: it follows the national average
+// for the chosen term until the user types their own.
+type FormState = Omit<MortgageInputs, keyof EstimatedCosts | "annualRatePercent">;
+
+/** Used until the national average loads, or if it can't. */
+const FALLBACK_RATE_PERCENT = 6.5;
 
 const DEFAULTS: FormState = {
   homePrice: 400_000,
   downPaymentPercent: 20,
-  annualRatePercent: 6.5,
   termYears: 30,
   hoaMonthly: 0,
 };
@@ -34,12 +39,34 @@ const ESTIMATE_NOTES: Record<keyof EstimatedCosts, string> = {
   pmiMonthly: `Estimated at ${ESTIMATE_RATES.pmiPercentOfLoan}% of loan per year`,
 };
 
+const linkButtonClass = "cursor-pointer text-sky-600 underline underline-offset-2";
+
+/** "Nov 5" from "2026-11-05", without a UTC parse shifting the day. */
+const surveyWeek = (isoDate: string) =>
+  new Date(`${isoDate}T00:00:00`).toLocaleDateString("en-US", { month: "short", day: "numeric" });
+
+/** Latest national-average rates, written to public/rates.json at build time. */
+function useMarketRates() {
+  const [rates, setRates] = useState<MarketRates | null>(null);
+  useEffect(() => {
+    const controller = new AbortController();
+    fetch(`${import.meta.env.BASE_URL}rates.json`, { cache: "no-cache", signal: controller.signal })
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => { if (isMarketRates(data)) setRates(data); })
+      .catch(() => {}); // Missing or unreachable: keep the fallback rate.
+    return () => controller.abort();
+  }, []);
+  return rates;
+}
+
 export default function App() {
   const { theme, toggle } = useTheme();
   const [inputs, setInputs] = useState<FormState>(DEFAULTS);
   // Dollar amounts the user typed. A cost without one follows its percentage estimate,
   // so it keeps up with price and down-payment changes until the user takes it over.
   const [overrides, setOverrides] = useState<Partial<EstimatedCosts>>({});
+  const [rateOverride, setRateOverride] = useState<number | undefined>(undefined);
+  const market = useMarketRates();
   const set = <K extends keyof FormState>(key: K) => (value: FormState[K]) =>
     setInputs((prev) => ({ ...prev, [key]: value }));
 
@@ -64,7 +91,7 @@ export default function App() {
           Your amount ·{" "}
           <button
             type="button"
-            className="cursor-pointer text-sky-600 underline underline-offset-2"
+            className={linkButtonClass}
             onClick={() =>
               setOverrides(({ [key]: _dropped, ...rest }) => rest)
             }
@@ -75,7 +102,23 @@ export default function App() {
       ),
   });
 
-  const payment = calculatePayment({ ...inputs, ...costs });
+  const marketRate = market && rateForTerm(market, inputs.termYears);
+  const annualRatePercent = rateOverride ?? marketRate?.rate ?? FALLBACK_RATE_PERCENT;
+  const rateNote =
+    market &&
+    marketRate &&
+    (rateOverride === undefined ? (
+      `National avg for ${marketRate.surveyTerm}-yr, week of ${surveyWeek(market.date)}`
+    ) : (
+      <>
+        Your rate ·{" "}
+        <button type="button" className={linkButtonClass} onClick={() => setRateOverride(undefined)}>
+          use national avg ({marketRate.rate}%)
+        </button>
+      </>
+    ));
+
+  const payment = calculatePayment({ ...inputs, annualRatePercent, ...costs });
   // The percent is the source of truth, so changing the price keeps the same down-payment share.
   const downPaymentDollars = (inputs.homePrice * inputs.downPaymentPercent) / 100;
 
@@ -116,7 +159,16 @@ export default function App() {
           </div>
 
           <div className={fieldPairClass}>
-            <NumberField id="rate" label="Interest rate" suffix="%" decimals={3} step={0.125} value={inputs.annualRatePercent} onChange={set("annualRatePercent")} />
+            <NumberField
+              id="rate"
+              label="Interest rate"
+              suffix="%"
+              decimals={3}
+              step={0.125}
+              value={annualRatePercent}
+              onChange={setRateOverride}
+              note={rateNote}
+            />
             <div className={fieldClass}>
               <label htmlFor="term" className={fieldLabelClass}>Loan term</label>
               <div className={inputWrapClass}>
@@ -152,7 +204,7 @@ export default function App() {
           <button
             type="button"
             className="cursor-pointer self-start rounded-lg border border-zinc-300 dark:border-zinc-800 px-3.5 py-2 text-zinc-600 dark:text-zinc-300 hover:border-zinc-500 dark:hover:border-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100"
-            onClick={() => { setInputs(DEFAULTS); setOverrides({}); }}
+            onClick={() => { setInputs(DEFAULTS); setOverrides({}); setRateOverride(undefined); }}
           >
             Reset to defaults
           </button>
