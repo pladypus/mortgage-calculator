@@ -1,7 +1,7 @@
-import { useEffect, useState } from "react";
 import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from "recharts";
 import type { MonthlyPayment } from "./mortgage";
 import { formatMoney } from "./format";
+import type { Theme } from "./theme";
 
 // Validated categorical slots 1–5, stepped separately for light and dark surfaces.
 const PALETTE = {
@@ -18,20 +18,7 @@ const PARTS = [
   { key: "hoa", label: "HOA fees" },
 ] as const;
 
-function useDarkMode() {
-  const query = "(prefers-color-scheme: dark)";
-  const [dark, setDark] = useState(() => window.matchMedia(query).matches);
-  useEffect(() => {
-    const mq = window.matchMedia(query);
-    const onChange = () => setDark(mq.matches);
-    mq.addEventListener("change", onChange);
-    return () => mq.removeEventListener("change", onChange);
-  }, []);
-  return dark;
-}
-
-export function PaymentChart({ payment }: { payment: MonthlyPayment }) {
-  const mode = useDarkMode() ? "dark" : "light";
+export function PaymentChart({ payment, theme: mode }: { payment: MonthlyPayment; theme: Theme }) {
   // Colour follows the part (fixed slot), never its rank, so hiding a zero slice repaints nothing.
   const slices = PARTS.map((p, i) => ({ ...p, value: payment[p.key], color: PALETTE[mode][i] }));
   const visible = slices.filter((s) => s.value > 0);

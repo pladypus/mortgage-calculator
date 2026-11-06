@@ -10,6 +10,8 @@ import {
   type MortgageInputs,
 } from "./mortgage";
 import { formatMoney } from "./format";
+import { useTheme } from "./theme";
+import { ThemeToggle } from "./ThemeToggle";
 
 const TERMS = [30, 20, 15, 10];
 
@@ -30,6 +32,7 @@ const ESTIMATE_NOTES: Record<keyof EstimatedCosts, string> = {
 };
 
 export default function App() {
+  const { theme, toggle } = useTheme();
   const [inputs, setInputs] = useState<FormState>(DEFAULTS);
   // Dollar amounts the user typed. A cost without one follows its percentage estimate,
   // so it keeps up with price and down-payment changes until the user takes it over.
@@ -69,9 +72,12 @@ export default function App() {
 
   return (
     <main className="page">
-      <header>
-        <h1>Mortgage calculator</h1>
-        <p className="subtitle">Estimate your monthly payment. Results update as you type.</p>
+      <header className="page-header">
+        <div>
+          <h1>Mortgage calculator</h1>
+          <p className="subtitle">Estimate your monthly payment. Results update as you type.</p>
+        </div>
+        <ThemeToggle theme={theme} onToggle={toggle} />
       </header>
 
       <div className="card">
@@ -139,7 +145,7 @@ export default function App() {
           <p className="results-label">Estimated monthly payment</p>
           <p className="results-total">{formatMoney(payment.total)}</p>
           <p className="results-loan">Loan amount {formatMoney(payment.loanAmount, 0)}</p>
-          <PaymentChart payment={payment} />
+          <PaymentChart payment={payment} theme={theme} />
         </section>
       </div>
 

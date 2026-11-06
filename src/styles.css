@@ -9,8 +9,10 @@
   color-scheme: light;
   font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
 }
+/* Dark tokens apply when the browser prefers dark and the user hasn't chosen light,
+   or when the user has chosen dark with the toggle (data-theme on <html>). */
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-theme="light"]) {
     --surface-1: #111110;
     --surface-2: #1a1a19;
     --border: #34332f;
@@ -20,6 +22,16 @@
     --accent: #3987e5;
     color-scheme: dark;
   }
+}
+:root[data-theme="dark"] {
+  --surface-1: #111110;
+  --surface-2: #1a1a19;
+  --border: #34332f;
+  --text-primary: #f0efec;
+  --text-secondary: #c3c2b7;
+  --text-muted: #8f8e85;
+  --accent: #3987e5;
+  color-scheme: dark;
 }
 * { box-sizing: border-box; }
 body { margin: 0; background: var(--surface-1); color: var(--text-primary); }
@@ -86,3 +98,11 @@ footer { margin-top: 24px; text-align: center; font-size: 0.8rem; color: var(--t
    background while inheriting dark-mode text, so give both explicit colours. */
 .input-wrap select { background-color: var(--surface-2); cursor: pointer; }
 .input-wrap select option { background-color: var(--surface-2); color: var(--text-primary); }
+.page-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
+.theme-toggle {
+  flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center;
+  width: 40px; height: 40px; border-radius: 10px; cursor: pointer;
+  background: var(--surface-2); color: var(--text-secondary); border: 1px solid var(--border);
+}
+.theme-toggle:hover { color: var(--text-primary); border-color: var(--text-muted); }
+.theme-toggle:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
