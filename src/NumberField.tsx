@@ -12,13 +12,14 @@ interface Props {
   decimals?: number;
   /** Small line under the input, e.g. where a default came from. */
   note?: ReactNode;
+  disabled?: boolean;
 }
 
 /**
  * A numeric input that keeps the user's raw text while focused, so derived
  * updates (e.g. the linked down-payment $/% pair) never fight the cursor.
  */
-export function NumberField({ id, label, value, onChange, prefix, suffix, step = 1, decimals = 0, note }: Props) {
+export function NumberField({ id, label, value, onChange, prefix, suffix, step = 1, decimals = 0, note, disabled = false }: Props) {
   const [draft, setDraft] = useState<string | null>(null);
   const shown =
     draft ??
@@ -37,6 +38,7 @@ export function NumberField({ id, label, value, onChange, prefix, suffix, step =
           inputMode="decimal"
           min={0}
           step={step}
+          disabled={disabled}
           value={shown}
           onFocus={() => setDraft(shown)}
           onBlur={() => setDraft(null)}
