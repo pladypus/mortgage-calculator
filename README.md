@@ -14,6 +14,10 @@ nix run .#preview     # serve the production build (run `npm run build` first)
 nix develop           # shell with Node 22 (or `direnv allow` to use .envrc)
 ```
 
+Once a day, entering the dev shell checks FlakeHub for a newer nixpkgs than
+`flake.lock` pins and prints a notice if there is one. It never changes the
+lock itself; run `nix flake update` when you want to take the update.
+
 ## Develop
 
 ```sh
