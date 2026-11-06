@@ -26,13 +26,11 @@ describe("calculatePayment", () => {
     expect(r.insurance).toBeCloseTo(1400 / 12, 6);
   });
 
-  it("charges no PMI at 20% down or more, whatever amount is entered", () => {
-    expect(calculatePayment(base).pmi).toBe(0);
-    expect(calculatePayment({ ...base, downPaymentPercent: 25 }).pmi).toBe(0);
-  });
-
-  it("charges the entered monthly PMI when down payment is under 20%", () => {
+  it("charges whatever monthly PMI it is given, at any down payment", () => {
+    // The 20% rule lives in the estimate; an amount the user entered is always charged.
     expect(calculatePayment({ ...base, downPaymentPercent: 10 }).pmi).toBe(150);
+    expect(calculatePayment({ ...base, downPaymentPercent: 25 }).pmi).toBe(150);
+    expect(calculatePayment({ ...base, pmiMonthly: 0 }).pmi).toBe(0);
   });
 
   it("handles a 0% interest rate", () => {
@@ -60,6 +58,7 @@ describe("calculatePayment", () => {
       homePrice: NaN,
       propertyTaxYearly: -1,
       insuranceYearly: NaN,
+      pmiMonthly: -10,
       hoaMonthly: -5,
     });
     expect(Number.isFinite(r.total)).toBe(true);
@@ -77,6 +76,12 @@ describe("estimateCosts", () => {
   it("estimates PMI at 0.5% of the loan per year, as a monthly amount", () => {
     // loan 360,000 * 0.5% / 12 = 150
     expect(estimateCosts(400_000, 10).pmiMonthly).toBeCloseTo(150, 6);
+  });
+
+  it("estimates no PMI at 20% down or more", () => {
+    expect(estimateCosts(400_000, 20).pmiMonthly).toBe(0);
+    expect(estimateCosts(400_000, 35).pmiMonthly).toBe(0);
+    expect(estimateCosts(400_000, 19.99).pmiMonthly).toBeGreaterThan(0);
   });
 
   it("returns zeros for unusable inputs", () => {

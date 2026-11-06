@@ -106,5 +106,3 @@ footer { margin-top: 24px; text-align: center; font-size: 0.8rem; color: var(--t
 }
 .theme-toggle:hover { color: var(--text-primary); border-color: var(--text-muted); }
 .theme-toggle:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-.input-wrap:has(input:disabled) { background: var(--surface-1); opacity: 0.6; }
-.input-wrap input:disabled { cursor: not-allowed; }

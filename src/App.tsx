@@ -43,12 +43,19 @@ export default function App() {
   const estimates = estimateCosts(inputs.homePrice, inputs.downPaymentPercent);
   const costs: EstimatedCosts = { ...estimates, ...overrides };
 
+  const pmiEstimateIsZero = inputs.downPaymentPercent >= PMI_THRESHOLD_PERCENT;
+  const estimateNote = (key: keyof EstimatedCosts) =>
+    key === "pmiMonthly" && pmiEstimateIsZero
+      ? `Estimated $0: lenders drop PMI at ${PMI_THRESHOLD_PERCENT}%+ down`
+      : ESTIMATE_NOTES[key];
+
+  // A typed amount is always used as-is and never changed automatically.
   const costField = (key: keyof EstimatedCosts) => ({
     value: costs[key],
     onChange: (v: number) => setOverrides((prev) => ({ ...prev, [key]: v })),
     note:
       overrides[key] === undefined ? (
-        ESTIMATE_NOTES[key]
+        estimateNote(key)
       ) : (
         <>
           Your amount ·{" "}
@@ -68,7 +75,6 @@ export default function App() {
   const payment = calculatePayment({ ...inputs, ...costs });
   // The percent is the source of truth, so changing the price keeps the same down-payment share.
   const downPaymentDollars = (inputs.homePrice * inputs.downPaymentPercent) / 100;
-  const pmiApplies = inputs.downPaymentPercent < PMI_THRESHOLD_PERCENT;
 
   return (
     <main className="page">
@@ -128,22 +134,7 @@ export default function App() {
               <NumberField id="insurance" label="Homeowners insurance" prefix="$" suffix="/yr" step={100} {...costField("insuranceYearly")} />
             </div>
             <div className="field-pair">
-              {pmiApplies ? (
-                <NumberField id="pmi" label="PMI" prefix="$" suffix="/mo" step={10} {...costField("pmiMonthly")} />
-              ) : (
-                // Mirrors what the chart charges. Any typed PMI amount is kept in
-                // overrides and returns if the down payment drops below the threshold.
-                <NumberField
-                  id="pmi"
-                  label="PMI"
-                  prefix="$"
-                  suffix="/mo"
-                  value={0}
-                  onChange={() => {}}
-                  disabled
-                  note={`Not charged with ${PMI_THRESHOLD_PERCENT}%+ down`}
-                />
-              )}
+              <NumberField id="pmi" label="PMI" prefix="$" suffix="/mo" step={10} {...costField("pmiMonthly")} />
               <NumberField id="hoa" label="HOA fees" prefix="$" suffix="/mo" step={25} value={inputs.hoaMonthly} onChange={set("hoaMonthly")} />
             </div>
           </details>

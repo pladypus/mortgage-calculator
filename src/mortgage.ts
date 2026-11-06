@@ -5,7 +5,6 @@ export interface MortgageInputs {
   termYears: number;
   propertyTaxYearly: number;
   insuranceYearly: number;
-  /** Only charged while the down payment is under 20%. */
   pmiMonthly: number;
   hoaMonthly: number;
 }
@@ -44,7 +43,12 @@ export function estimateCosts(homePrice: number, downPaymentPercent: number): Es
   return {
     propertyTaxYearly: (price * ESTIMATE_RATES.propertyTaxPercentOfPrice) / 100,
     insuranceYearly: (price * ESTIMATE_RATES.insurancePercentOfPrice) / 100,
-    pmiMonthly: (loan * ESTIMATE_RATES.pmiPercentOfLoan) / 100 / 12,
+    // Lenders drop PMI at 20% down; only the estimate applies that rule, so an
+    // amount the user enters is always charged.
+    pmiMonthly:
+      safe(downPaymentPercent) < PMI_THRESHOLD_PERCENT
+        ? (loan * ESTIMATE_RATES.pmiPercentOfLoan) / 100 / 12
+        : 0,
   };
 }
 
@@ -63,8 +67,7 @@ export function calculatePayment(inputs: MortgageInputs): MonthlyPayment {
 
   const propertyTax = safe(inputs.propertyTaxYearly) / 12;
   const insurance = safe(inputs.insuranceYearly) / 12;
-  const pmi =
-    safe(inputs.downPaymentPercent) < PMI_THRESHOLD_PERCENT ? safe(inputs.pmiMonthly) : 0;
+  const pmi = safe(inputs.pmiMonthly);
   const hoa = safe(inputs.hoaMonthly);
 
   return {
