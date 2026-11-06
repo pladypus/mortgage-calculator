@@ -167,14 +167,15 @@ export default function App() {
       </div>
 
       <footer className="mt-6 text-center text-[0.8rem] text-fg-muted">
-        Estimates only. Your actual payment depends on your lender, location and credit.
-        {' · '}
-        <a
-          href="https://github.com/pladypus/mortgage-calculator"
-          className="underline underline-offset-2 hover:text-fg focus-visible:rounded-xs focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
-        >
-          <FontAwesomeIcon icon={faGithub} aria-hidden="true" className="mr-[0.5em]" />Source on GitHub
-        </a>
+        <p>Estimates only. Your actual payment depends on your lender, location and credit.</p>
+        <p className="mt-2">
+          <a
+            href="https://github.com/pladypus/mortgage-calculator"
+            className="underline underline-offset-2 hover:text-fg focus-visible:rounded-xs focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+          >
+            <FontAwesomeIcon icon={faGithub} aria-hidden="true" className="mr-[0.5em]" />Source on GitHub
+          </a>
+        </p>
       </footer>
     </main>
   );
