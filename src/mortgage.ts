@@ -37,11 +37,16 @@ function loanAmountFor(homePrice: number, downPaymentPercent: number) {
   return safe(homePrice) * (1 - downPct / 100);
 }
 
-export function estimateCosts(homePrice: number, downPaymentPercent: number): EstimatedCosts {
+export function estimateCosts(
+  homePrice: number,
+  downPaymentPercent: number,
+  /** The local effective rate when known, e.g. from the buyer's ZIP code. */
+  propertyTaxPercent: number = ESTIMATE_RATES.propertyTaxPercentOfPrice,
+): EstimatedCosts {
   const price = safe(homePrice);
   const loan = loanAmountFor(homePrice, downPaymentPercent);
   return {
-    propertyTaxYearly: (price * ESTIMATE_RATES.propertyTaxPercentOfPrice) / 100,
+    propertyTaxYearly: (price * propertyTaxPercent) / 100,
     insuranceYearly: (price * ESTIMATE_RATES.insurancePercentOfPrice) / 100,
     // Lenders drop PMI at 20% down; only the estimate applies that rule, so an
     // amount the user enters is always charged.

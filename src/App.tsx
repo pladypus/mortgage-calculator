@@ -13,6 +13,7 @@ import {
 } from "./mortgage";
 import { formatMoney } from "./format";
 import { isMarketRates, rateForTerm, type MarketRates } from "./rates";
+import { isTaxRatesFile, taxRateForZip, type TaxRatesFile } from "./taxRates";
 import { useTheme } from "./theme";
 import { ThemeToggle } from "./ThemeToggle";
 import { fieldClass, fieldLabelClass, fieldPairClass, inputClass, inputWrapClass } from "./classes";
@@ -59,6 +60,28 @@ function useMarketRates() {
   return rates;
 }
 
+/**
+ * Property-tax rates by ZIP (public/tax-rates.json, ~100 KB compressed), fetched
+ * only once someone enters a ZIP. "unavailable" if that fails.
+ */
+function useTaxRates(needed: boolean) {
+  const [rates, setRates] = useState<TaxRatesFile | "unavailable" | null>(null);
+  const requested = needed || rates !== null;
+  useEffect(() => {
+    if (!requested) return;
+    const controller = new AbortController();
+    fetch(`${import.meta.env.BASE_URL}tax-rates.json`, { signal: controller.signal })
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => setRates(isTaxRatesFile(data) ? data : "unavailable"))
+      .catch(() => { if (!controller.signal.aborted) setRates("unavailable"); });
+    return () => controller.abort();
+  }, [requested]);
+  return rates;
+}
+
+const defaultTaxNote = (prefix: string) =>
+  `${prefix}estimated at ${ESTIMATE_RATES.propertyTaxPercentOfPrice}% of price`;
+
 export default function App() {
   const { theme, toggle } = useTheme();
   const [inputs, setInputs] = useState<FormState>(DEFAULTS);
@@ -67,17 +90,33 @@ export default function App() {
   const [overrides, setOverrides] = useState<Partial<EstimatedCosts>>({});
   const [rateOverride, setRateOverride] = useState<number | undefined>(undefined);
   const market = useMarketRates();
+  const [zip, setZip] = useState("");
+  const zipComplete = zip.length === 5;
+  const taxRates = useTaxRates(zipComplete);
   const set = <K extends keyof FormState>(key: K) => (value: FormState[K]) =>
     setInputs((prev) => ({ ...prev, [key]: value }));
 
-  const estimates = estimateCosts(inputs.homePrice, inputs.downPaymentPercent);
+  const zipTax = zipComplete && taxRates && taxRates !== "unavailable" ? taxRateForZip(taxRates, zip) : null;
+  const zipNote = !zipComplete
+    ? "Optional, for a local property-tax estimate"
+    : taxRates === null
+      ? "Looking up local tax rate…"
+      : zipTax
+        ? `Property tax ${zipTax.percent}% of price, typical for ${zipTax.area}`
+        : taxRates === "unavailable"
+          ? defaultTaxNote("Couldn't load local rates · ")
+          : defaultTaxNote(`No data for ${zip} · `);
+
+  const estimates = estimateCosts(inputs.homePrice, inputs.downPaymentPercent, zipTax?.percent);
   const costs: EstimatedCosts = { ...estimates, ...overrides };
 
   const pmiEstimateIsZero = inputs.downPaymentPercent >= PMI_THRESHOLD_PERCENT;
   const estimateNote = (key: keyof EstimatedCosts) =>
     key === "pmiMonthly" && pmiEstimateIsZero
       ? `Estimated $0: lenders drop PMI at ${PMI_THRESHOLD_PERCENT}%+ down`
-      : ESTIMATE_NOTES[key];
+      : key === "propertyTaxYearly" && zipTax
+        ? `Estimated at ${zipTax.percent}% of price, typical for ${zipTax.area}`
+        : ESTIMATE_NOTES[key];
 
   // A typed amount is always used as-is and never changed automatically.
   const costField = (key: keyof EstimatedCosts) => ({
@@ -134,7 +173,26 @@ export default function App() {
 
       <div className="grid grid-cols-1 gap-8 rounded-xl border border-zinc-300 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-4 md:grid-cols-2 md:p-6">
         <form className="flex min-w-0 flex-col gap-4" onSubmit={(e) => e.preventDefault()}>
-          <NumberField id="price" label="Home price" prefix="$" value={inputs.homePrice} onChange={set("homePrice")} step={1000} />
+          <div className={fieldPairClass}>
+            <NumberField id="price" label="Home price" prefix="$" value={inputs.homePrice} onChange={set("homePrice")} step={1000} />
+            <div className={fieldClass}>
+              <label htmlFor="zip" className={fieldLabelClass}>ZIP code</label>
+              <div className={inputWrapClass}>
+                <input
+                  id="zip"
+                  className={inputClass}
+                  type="text"
+                  inputMode="numeric"
+                  autoComplete="postal-code"
+                  maxLength={5}
+                  placeholder="e.g. 07030"
+                  value={zip}
+                  onChange={(e) => setZip(e.target.value.replace(/\D/g, "").slice(0, 5))}
+                />
+              </div>
+              <p className="text-xs text-zinc-500 dark:text-zinc-400" aria-live="polite">{zipNote}</p>
+            </div>
+          </div>
 
           <div className={fieldPairClass}>
             <NumberField
@@ -204,7 +262,7 @@ export default function App() {
           <button
             type="button"
             className="cursor-pointer self-start rounded-lg border border-zinc-300 dark:border-zinc-800 px-3.5 py-2 text-zinc-600 dark:text-zinc-300 hover:border-zinc-500 dark:hover:border-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100"
-            onClick={() => { setInputs(DEFAULTS); setOverrides({}); setRateOverride(undefined); }}
+            onClick={() => { setInputs(DEFAULTS); setOverrides({}); setRateOverride(undefined); setZip(""); }}
           >
             Reset to defaults
           </button>
@@ -220,6 +278,10 @@ export default function App() {
 
       <footer className="mt-6 text-center text-xs text-zinc-500 dark:text-zinc-400">
         <p>Estimates only. Your actual payment depends on your lender, location and credit.</p>
+        <p className="mt-2">
+          ZIP tax rates are what current owners pay, from Census {taxRates && taxRates !== "unavailable" ? taxRates.source : "ACS"} data.
+          Where assessments are capped, as in California, recent buyers often pay more.
+        </p>
         <p className="mt-2">
           <a
             href="https://github.com/pladypus/mortgage-calculator"

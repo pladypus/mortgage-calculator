@@ -34,6 +34,35 @@ jobs:
       # falls back to its built-in default rate.
       - run: npm run rates
         continue-on-error: ${{ github.event_name != 'schedule' }}
+
+      # Property-tax rates by ZIP come from the Census Bureau's yearly survey.
+      # They're cached by survey year (and by the code that builds them), so the
+      # ~60 MB download only happens when a new survey is published. If the
+      # Census site is down, the last cached file is used; failing that, the
+      # site deploys without it and the ZIP field says local rates are unavailable.
+      - name: Find newest Census survey
+        id: acs
+        run: echo "year=$(node scripts/build-tax-rates.ts --latest-year)" >> "$GITHUB_OUTPUT"
+        continue-on-error: true
+      - name: Restore tax rates
+        id: tax-cache
+        uses: actions/cache/restore@v4
+        with:
+          path: public/tax-rates.json
+          key: tax-rates-${{ steps.acs.outputs.year || 'unknown' }}-${{ hashFiles('src/taxRates.ts', 'scripts/build-tax-rates.ts') }}
+          restore-keys: tax-rates-
+      - name: Build tax rates
+        id: tax-build
+        if: steps.tax-cache.outputs.cache-hit != 'true' && steps.acs.outputs.year != ''
+        run: node scripts/build-tax-rates.ts ${{ steps.acs.outputs.year }}
+        continue-on-error: true
+      - name: Save tax rates
+        if: steps.tax-build.outcome == 'success'
+        uses: actions/cache/save@v4
+        with:
+          path: public/tax-rates.json
+          key: ${{ steps.tax-cache.outputs.cache-primary-key }}
+
       - run: npm run build
       - uses: actions/upload-pages-artifact@v3
         with:

@@ -35,6 +35,14 @@ cross-origin requests, so `npm run rates` downloads it into `public/rates.json`
 (git-ignored) and the page loads that file on startup. Without the file, the
 rate defaults to 6.5%. Run `npm run rates` once to see the real average locally.
 
+Entering a ZIP code sets the property-tax estimate to that area's effective rate:
+total real estate tax paid by homeowners divided by the total value of their
+homes, from the Census Bureau's American Community Survey 5-year estimates.
+ZIPs with too little data use their 3-digit prefix. `npm run tax-rates` builds
+`public/tax-rates.json` (git-ignored) from the newest published survey, about a
+60 MB download. The deploy workflow caches that file by survey year, so it picks
+up each December's new survey on its own and otherwise reuses the cached copy.
+
 ## Deploy
 
 Every push to `main` runs `.github/workflows/deploy.yml`, which tests, builds and

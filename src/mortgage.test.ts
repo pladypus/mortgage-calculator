@@ -73,6 +73,10 @@ describe("estimateCosts", () => {
     expect(e.insuranceYearly).toBeCloseTo(1_400, 6);
   });
 
+  it("uses a local property-tax rate when given one", () => {
+    expect(estimateCosts(400_000, 20, 1.58).propertyTaxYearly).toBeCloseTo(6_320, 6);
+  });
+
   it("estimates PMI at 0.5% of the loan per year, as a monthly amount", () => {
     // loan 360,000 * 0.5% / 12 = 150
     expect(estimateCosts(400_000, 10).pmiMonthly).toBeCloseTo(150, 6);
