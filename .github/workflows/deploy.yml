@@ -19,6 +19,20 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  # GitHub disables scheduled workflows after 60 days without repo activity.
+  # Re-enabling this one from its own scheduled run keeps the daily refresh going
+  # when the code isn't changing. This is widely used but not documented by
+  # GitHub; it warns the owner by email before disabling a schedule if it stops working.
+  keepalive:
+    if: github.event_name == 'schedule'
+    runs-on: ubuntu-latest
+    permissions:
+      actions: write
+    steps:
+      - run: gh api -X PUT "repos/${{ github.repository }}/actions/workflows/deploy.yml/enable"
+        env:
+          GH_TOKEN: ${{ github.token }}
+
   build:
     runs-on: ubuntu-latest
     steps:

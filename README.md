@@ -48,7 +48,9 @@ up each December's new survey on its own and otherwise reuses the cached copy.
 Every push to `main` runs `.github/workflows/deploy.yml`, which tests, builds and
 publishes `dist/` to GitHub Pages. `public/CNAME` pins the custom domain. It
 also runs daily to refresh the rates. GitHub disables scheduled workflows after
-60 days without repo activity; re-enable it from the Actions tab if that happens.
+60 days without repo activity, so each scheduled run re-enables the workflow
+through the API. If GitHub emails that the schedule is being disabled anyway,
+re-enable it from the Actions tab.
 
 One-time setup:
 
