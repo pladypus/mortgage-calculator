@@ -1,0 +1,28 @@
+name: Dependabot auto-merge
+
+on: pull_request
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  # Every Dependabot PR, majors included, merges once the required check passes.
+  # A merge made with GITHUB_TOKEN doesn't trigger deploy.yml's push run, so the
+  # daily scheduled run deploys it instead.
+  auto-merge:
+    if: github.event.pull_request.user.login == 'dependabot[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - id: metadata
+        uses: dependabot/fetch-metadata@v2
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+      - run: |
+          echo "Updating $DEPENDENCIES ($UPDATE_TYPE)"
+          gh pr merge --auto --squash "$PR_URL"
+        env:
+          DEPENDENCIES: ${{ steps.metadata.outputs.dependency-names }}
+          UPDATE_TYPE: ${{ steps.metadata.outputs.update-type }}
+          PR_URL: ${{ github.event.pull_request.html_url }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

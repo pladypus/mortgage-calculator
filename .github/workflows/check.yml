@@ -1,0 +1,24 @@
+name: Check
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  # The ruleset on main requires this job by name, so rename it there too if it changes.
+  # Rates and tax rates aren't fetched: the page loads them at runtime with
+  # fallbacks, so the build doesn't need them.
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm test
+      - run: npm run build

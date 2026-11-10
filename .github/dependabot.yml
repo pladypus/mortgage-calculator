@@ -1,0 +1,23 @@
+version: 2
+updates:
+  # Minor and patch updates share one PR; each major gets its own.
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: monthly
+    cooldown:
+      default-days: 7
+    groups:
+      npm-minor-and-patch:
+        update-types: [minor, patch]
+
+  # Keeps the deploy workflow's actions ahead of GitHub retiring their Node runtimes.
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly
+    cooldown:
+      default-days: 7
+    groups:
+      github-actions:
+        patterns: ["*"]
