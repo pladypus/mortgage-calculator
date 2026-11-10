@@ -36,8 +36,8 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
         with:
           node-version: 22
           cache: npm
@@ -60,7 +60,7 @@ jobs:
         continue-on-error: true
       - name: Restore tax rates
         id: tax-cache
-        uses: actions/cache/restore@v4
+        uses: actions/cache/restore@v6
         with:
           path: public/tax-rates.json
           key: tax-rates-${{ steps.acs.outputs.year || 'unknown' }}-${{ hashFiles('src/taxRates.ts', 'scripts/build-tax-rates.ts') }}
@@ -72,13 +72,13 @@ jobs:
         continue-on-error: true
       - name: Save tax rates
         if: steps.tax-build.outcome == 'success'
-        uses: actions/cache/save@v4
+        uses: actions/cache/save@v6
         with:
           path: public/tax-rates.json
           key: ${{ steps.tax-cache.outputs.cache-primary-key }}
 
       - run: npm run build
-      - uses: actions/upload-pages-artifact@v3
+      - uses: actions/upload-pages-artifact@v5
         with:
           path: dist
 
@@ -90,4 +90,4 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - id: deployment
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5
